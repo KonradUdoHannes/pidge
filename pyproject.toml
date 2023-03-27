@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 name = "pidge"
 version = "0.1.0"
 description = ""
-authors = [ "konrad.woelms@gmail.com",]
+authors = ["Konrad Wölms <konrad.woelms@gmail.com>",]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
