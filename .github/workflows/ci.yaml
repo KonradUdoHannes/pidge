@@ -49,6 +49,7 @@
       "run": |
         pip install -U pip
         pip install poetry>=1.1.11
+        poetry config installer.modern-installation false
         poetry install
     - "name": |-
         Run pre-commit hooks
