@@ -1,0 +1,23 @@
+venv/*
+.ipynb_checkpoints
+__pycache__
+*.html
+.DS_Store
+.idea/
+*.csv
+*.png
+# Ignore dynaconf secret files
+.secrets.*
+*.swp
+*.pkl
+*.parquet
+local/*
+*.coverage*
+dist/*
+.vscode/
+*.log
+*.h5
+*.hdf5
+prof/
+.python-version
+.mypy_cache/
