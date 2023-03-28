@@ -17,3 +17,7 @@ test:
 .PHONY: lint
 lint:
 	poetry run pre-commit run --all-files
+
+.PHONY: dashboard-dev
+dashboard-dev:
+	poetry run panel serve --autoreload pidge/run.py
