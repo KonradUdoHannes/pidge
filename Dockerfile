@@ -12,4 +12,4 @@ RUN poetry install
 COPY pidge pidge
 RUN poetry install
 
-CMD ["poetry","run","panel","serve","pidge/run.py"]
+CMD ["poetry","run","panel","serve","--allow-websocket-origin","*","pidge/run.py"]
