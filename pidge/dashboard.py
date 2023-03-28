@@ -79,5 +79,25 @@ class Cleaner(param.Parameterized):
 
     @param.depends("_parse_cleaning_rule")
     def view_rule(self):
-        # return pn.widgets.JSONEditor(value=self.cleaning_rule,mode='view',width=300,height=300)
         return pn.pane.JSON(self.cleaning_rule_json)
+
+
+def create_dashboard(cleaner, width=None):
+    FIRST_COL_FRACTION = 0.8
+
+    if width is not None:
+        first_width = int(FIRST_COL_FRACTION * width)
+        second_width = width - first_width
+        gap_cols = list(cleaner.view_gaps.value.columns)
+        cleaner.view_gaps.widths = {"index": first_width, gap_cols[0]: second_width}
+
+        tsum_cols = list(cleaner.view_targets.value.columns)
+        cleaner.view_targets.widths = {"index": first_width, tsum_cols[0]: second_width}
+    return pn.Row(
+        pn.Column(cleaner.view_gaps, cleaner.view_targets),
+        pn.Column(
+            pn.panel(cleaner.param, parameters=["category", "substring", "insert"]),
+            cleaner.view_rule,
+        ),
+        height=500,
+    )
