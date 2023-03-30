@@ -1,25 +1,25 @@
 import pytest
 
-from pidge.core import ColCleanRule
+from pidge.core import PidgeMappingRule
 
 
 @pytest.fixture
-def empty_rule() -> ColCleanRule:
+def empty_rule() -> PidgeMappingRule:
     return {"source": "shop_raw", "target": "shop", "rules": {}}
 
 
 @pytest.fixture
-def empty_category_rule() -> ColCleanRule:
+def empty_category_rule() -> PidgeMappingRule:
     return {"source": "shop_raw", "target": "shop", "rules": {"REWE": []}}
 
 
 @pytest.fixture
-def single_rule() -> ColCleanRule:
+def single_rule() -> PidgeMappingRule:
     return {"source": "shop_raw", "target": "shop", "rules": {"Shopping": ["REWE"]}}
 
 
 @pytest.fixture
-def multiple_pattern_rule() -> ColCleanRule:
+def multiple_pattern_rule() -> PidgeMappingRule:
     return {
         "source": "shop_raw",
         "target": "shop",
@@ -30,7 +30,7 @@ def multiple_pattern_rule() -> ColCleanRule:
 
 
 @pytest.fixture
-def multiple_rules() -> ColCleanRule:
+def multiple_rules() -> PidgeMappingRule:
     return {"source": "shop_raw", "target": "shop", "rules": {"REWE": ["REWE"], "ALDI": ["ALDI"]}}
 
 

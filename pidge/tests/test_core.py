@@ -1,7 +1,10 @@
+import json
+
 from pidge.core import (
-    apply_clean_rule,
+    apply_pidge_mapping,
     apply_rules,
     explode_rules,
+    pidge,
     summarize_rule_gaps,
     summarize_target,
 )
@@ -48,9 +51,9 @@ def test_apply_rules_1_cat(exploded_rules_1_category):
     assert apply_rules("Edeka Ostend", exploded_rules_1_category) is None
 
 
-def test_apply_clean_rule(raw_shops, multiple_rules):
+def test_apply_pidge_mapping(raw_shops, multiple_rules):
     raw_shops_backup = raw_shops.copy()
-    cleaned_shops = apply_clean_rule(raw_shops, multiple_rules)
+    cleaned_shops = apply_pidge_mapping(raw_shops, multiple_rules)
     assert raw_shops_backup.equals(raw_shops)
     assert multiple_rules["target"] in cleaned_shops
     assert "REWE" in cleaned_shops[multiple_rules["target"]].values
@@ -58,8 +61,24 @@ def test_apply_clean_rule(raw_shops, multiple_rules):
     assert cleaned_shops[multiple_rules["target"]].isna().any()
 
     multiple_rules["target"] = "shops_2"
-    cleaned_shops = apply_clean_rule(raw_shops, multiple_rules)
+    cleaned_shops = apply_pidge_mapping(raw_shops, multiple_rules)
     assert "shops_2" in cleaned_shops
+
+
+def test_pidge_with_dict(raw_shops, multiple_rules):
+    cleaned_shops1 = apply_pidge_mapping(raw_shops, multiple_rules)
+    cleaned_shops2 = pidge(raw_shops, rule=multiple_rules)
+    assert cleaned_shops1.equals(cleaned_shops2)
+
+
+def test_pidge_with_file(raw_shops, multiple_rules, tmp_path):
+    rule_file = tmp_path / "rule.json"
+    with open(rule_file, "w") as f:
+        json.dump(multiple_rules, f)
+
+    cleaned_shops1 = apply_pidge_mapping(raw_shops, multiple_rules)
+    cleaned_shops2 = pidge(raw_shops, rule_file=rule_file)
+    assert cleaned_shops1.equals(cleaned_shops2)
 
 
 def test_summarize_rule_gaps(cleaned_shops, multiple_rules):

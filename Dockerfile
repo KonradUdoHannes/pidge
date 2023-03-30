@@ -2,6 +2,7 @@ FROM python:3.11.1-slim
 
 RUN mkdir /app
 WORKDIR /app
+RUN apt update && apt install make
 RUN pip install -U pip
 RUN pip install poetry
 RUN poetry config installer.modern-installation false
@@ -11,5 +12,6 @@ RUN poetry install
 
 COPY pidge pidge
 RUN poetry install
+COPY Makefile .
 
-CMD ["poetry","run","panel","serve","--allow-websocket-origin","*","pidge/run.py"]
+CMD ["make","web-ui"]

@@ -5,7 +5,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "pidge"
 version = "0.1.0"
-description = ""
+description = "pidge helps with the creation of mappings for tabular string data"
+readme = "README.md"
 authors = ["Konrad Wölms <konrad.woelms@gmail.com>",]
 
 [tool.poetry.dependencies]
@@ -21,6 +22,7 @@ pytest-cov = "^3.0.0"
 [tool.poetry.group.dev.dependencies]
 faker = "^18.3.1"
 ipykernel = "^6.22.0"
+twine = "^4.0.2"
 
 [tool.coverage.run]
 branch = true
