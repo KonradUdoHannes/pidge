@@ -11,6 +11,7 @@ COPY poetry.lock .
 RUN poetry install
 
 COPY pidge pidge
+COPY README.md .
 RUN poetry install
 COPY Makefile .
 
