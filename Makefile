@@ -42,9 +42,9 @@ build:
 
 .PHONY:upload-test
 upload-test: build
-	poetry run twine --repository testpypi dist/*
+	poetry run twine upload --repository testpypi dist/*
 
 
 .PHONY:upload
 upload: build
-	poetry run twine --repository testpypi dist/*
+	poetry run twine upload dist/*
