@@ -10,11 +10,15 @@ EXAMPLE_RULE = {
 }
 
 
-def run():
+def create_ui_with_sample_data():
     fake_expenses = get_fake_expenses()
     mapper = PidgeMapper(fake_expenses, EXAMPLE_RULE)
 
-    ui = create_web_ui(mapper, 500)
+    return create_web_ui(mapper, 500)
+
+
+def run():
+    ui = create_ui_with_sample_data()
     pn.serve(
         ui,
         websocket_origin="*",
