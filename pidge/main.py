@@ -5,7 +5,7 @@ from pidge.ui import PidgeMapper, create_web_ui
 
 EXAMPLE_RULE = {
     "source": "recipient",
-    "target": "shop",
+    "target": "expense_category",
     "rules": {"REWE": ["REWE"], "Fast Food": ["Burger King", "KFC"]},
 }
 
@@ -18,9 +18,8 @@ def create_ui_with_sample_data():
 
 
 def run():
-    ui = create_ui_with_sample_data()
     pn.serve(
-        ui,
+        create_ui_with_sample_data,
         websocket_origin="*",
         port=5006,
         show=False,

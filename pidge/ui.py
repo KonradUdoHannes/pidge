@@ -25,14 +25,14 @@ class PidgeMapper(param.Parameterized):
     insert = param.Action(lambda x: x.insert_rule(), label="Insert Rule")
     reset = param.Action(lambda x: x.reset_rule(), label="Reset Rules")
 
-    def __init__(self, raw_data: pd.DataFrame, rule):
+    def __init__(self, input_data: pd.DataFrame, rule):
         super().__init__()
 
         # TODO Make private
         self.gap_view = None
         self.target_view = None
 
-        self._raw_data = raw_data.copy()
+        self._input_data = input_data.copy()
         self.mapping_rule_json = json.dumps(rule)
 
         # copy initial values as the mapping_rule dict is subject
@@ -58,7 +58,7 @@ class PidgeMapper(param.Parameterized):
 
     @param.depends("_parse_mapping_rule", "data_update", watch=True)
     def calc_mapped_data(self):
-        self._mapped_data = apply_pidge_mapping(self._raw_data, self.mapping_rule)
+        self._mapped_data = apply_pidge_mapping(self._input_data, self.mapping_rule)
 
     @param.depends("calc_mapped_data", watch=True)
     def calc_rule_gaps(self):
@@ -130,13 +130,13 @@ class PidgeMapper(param.Parameterized):
     @param.depends("calc_mapped_data")
     def mapped_data(self):
         return pn.widgets.Tabulator(
-            self._mapped_data, pagination="local", page_size=5, show_index=False
+            self._mapped_data, pagination="local", page_size=10, show_index=False
         )
 
     @param.depends("data_update")
-    def raw_data(self):
+    def input_data(self):
         return pn.widgets.Tabulator(
-            self._raw_data, pagination="local", page_size=5, show_index=False
+            self._input_data, pagination="local", page_size=10, show_index=False
         )
 
 
@@ -162,18 +162,18 @@ def create_panel(mapper, width=None):
     rule_export = pn.widgets.FileDownload(callback=download, filename=f"{mapper.rule_name}.json")
     data_import = pn.widgets.FileInput(accept=".csv")
 
-    def load_raw_data(event):
+    def load_input_data(event):
         s = str(event.new, "utf-8")
 
         virtual_data_file = StringIO(s)
 
         data = pd.read_csv(virtual_data_file)
         # TODO: Should not call a private attribute here.
-        mapper._raw_data = data
+        mapper._input_data = data
         mapper.source_column = get_first_string_col(data)
         mapper.data_update = True
 
-    data_import.param.watch(load_raw_data, "value")
+    data_import.param.watch(load_input_data, "value")
 
     tabs = pn.Tabs()
 
@@ -183,7 +183,7 @@ def create_panel(mapper, width=None):
         parameters=m_params,
         width=275,
         sort=lambda x: (["name"] + m_params).index(x[0]),
-        name="Mapping from recipient to shop",
+        name="",
     )
 
     mapping_params[0].style = {"font-size": "16px"}
@@ -227,7 +227,7 @@ def create_panel(mapper, width=None):
 
     tabs.append(("Mapping Controll", mapping_control))
 
-    tabs.append(("Raw Data", pn.panel(mapper.raw_data)))
+    tabs.append(("Input Data", pn.panel(mapper.input_data)))
     mapped_data = pn.panel(mapper.mapped_data)
     tabs.append(("Mapped Data", mapped_data))
     tabs.append(("Export Preview", mapping_view))
