@@ -1,12 +1,17 @@
 import json
 from io import StringIO
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 import panel as pn
 import param
+from jinja2 import Environment, FileSystemLoader
 
 from .core import apply_pidge_mapping, summarize_rule_gaps, summarize_target
+
+TEMPLATE_FOLDER = Path(__file__).parent
+TEMPLATE_FILE = "web_ui_template.html"
 
 
 class PidgeMapper(param.Parameterized):
@@ -18,7 +23,7 @@ class PidgeMapper(param.Parameterized):
     category = param.String()
     pattern = param.String()
     insert = param.Action(lambda x: x.insert_rule(), label="Insert Rule")
-    reset = param.Action(lambda x: x.reset_rule(), label="Reset rules")
+    reset = param.Action(lambda x: x.reset_rule(), label="Reset Rules")
 
     def __init__(self, raw_data: pd.DataFrame, rule):
         super().__init__()
@@ -57,11 +62,17 @@ class PidgeMapper(param.Parameterized):
 
     @param.depends("calc_mapped_data", watch=True)
     def calc_rule_gaps(self):
-        self._gap_summary = summarize_rule_gaps(self._mapped_data, self.mapping_rule)
+        summary = summarize_rule_gaps(self._mapped_data, self.mapping_rule)
+        summary.name = "count"
+        summary.index.name = self.source_column
+        self._gap_summary = summary.to_frame()
 
     @param.depends("calc_mapped_data", watch=True)
     def calc_target_summary(self):
-        self._target_summary = summarize_target(self._mapped_data, self.mapping_rule)
+        summary = summarize_target(self._mapped_data, self.mapping_rule)
+        summary.name = "count"
+        summary.index.name = self.target_column
+        self._target_summary = summary.to_frame()
 
     def insert_rule(self):
         if (cat := self.category) != "" and (sub := self.pattern) != "":
@@ -80,27 +91,37 @@ class PidgeMapper(param.Parameterized):
     def view_gaps(self):
         if self.gap_view is None:
             self.gap_view = pn.widgets.Tabulator(
-                value=self._gap_summary.to_frame(), pagination="local", page_size=5
+                value=self._gap_summary,
+                pagination="local",
+                page_size=5,
+                width=400,
+                height=210,
+                widths={self.source_column: "80%", "count": "20%"},
             )
         return self.gap_view
 
     @param.depends("calc_rule_gaps", watch=True)
     def view_update_gap(self):
         if self.gap_view is not None:
-            self.gap_view.value = self._gap_summary.to_frame()
+            self.gap_view.value = self._gap_summary
 
     @property
     def view_targets(self):
         if self.target_view is None:
             self.target_view = pn.widgets.Tabulator(
-                value=self._target_summary.to_frame(), pagination="local", page_size=5
+                value=self._target_summary,
+                pagination="local",
+                page_size=5,
+                width=400,
+                height=210,
+                widths={self.target_column: "80%", "count": "20%"},
             )
         return self.target_view
 
     @param.depends("calc_target_summary", watch=True)
     def view_update_target(self):
         if self.target_view is not None:
-            self.target_view.value = self._target_summary.to_frame()
+            self.target_view.value = self._target_summary
 
     @param.depends("_parse_mapping_rule")
     def view_rule(self):
@@ -117,30 +138,6 @@ class PidgeMapper(param.Parameterized):
         return pn.widgets.Tabulator(
             self._raw_data, pagination="local", page_size=5, show_index=False
         )
-
-
-template = """
-{% extends base %}
-
-{% block postamble %}
-<style>
-    .center {
-      margin: auto;
-      width: 50%;
-      padding: 10px;
-    }
-</style>
-{% endblock %}
-
-<!-- goes in body -->
-{% block contents %}
-<h1> Dashboard </h1>
-
-<div class="center">
- {{ embed(roots.DASHBOARD) }}
- </div>
-{% endblock %}
-"""
 
 
 def create_panel(mapper, width=None):
@@ -180,13 +177,51 @@ def create_panel(mapper, width=None):
 
     tabs = pn.Tabs()
 
-    mapping_control = pn.Row(
+    m_params = ["pattern", "category", "insert", "reset"]
+    mapping_params = pn.panel(
+        mapper.param,
+        parameters=m_params,
+        width=275,
+        sort=lambda x: (["name"] + m_params).index(x[0]),
+        name="Mapping from recipient to shop",
+    )
+
+    mapping_params[0].style = {"font-size": "16px"}
+
+    gap_table_headline = pn.pane.HTML()
+    target_overview_headline = pn.pane.HTML()
+
+    def insert_target_col(event):
+        mapping_params[2].name = f"Target category in {event.new} col"
+        target_overview_headline.object = f"<p><strong>{event.new}</strong> (target) overview</p>"
+        mapping_params[0].value = f"Mapping from {event.obj.source_column} to {event.new}"
+
+    mapper.param.watch(insert_target_col, "target_column")
+
+    def insert_source_col(event):
+        mapping_params[1].name = f"Pattern for {event.new} col"
+        gap_table_headline.object = (
+            f"<p><strong>{event.new} </strong> (source) values without mapping</p>"
+        )
+        mapping_params[0].value = f"Mapping from {event.new} to {event.obj.target_column}"
+
+    mapper.param.watch(insert_source_col, "source_column")
+
+    mapper.param.trigger("source_column", "target_column")
+
+    mapping_control = pn.FlexBox(
         pn.Column(
-            pn.panel(mapper.param, parameters=["category", "pattern", "insert", "reset"]),
+            mapping_params,
             rule_export,
+            width=300,
         ),
-        pn.Column(mapper.view_gaps, mapper.view_targets),
-        height=500,
+        pn.Column(
+            gap_table_headline,
+            mapper.view_gaps,
+            target_overview_headline,
+            mapper.view_targets,
+            width=300,
+        ),
     )
     mapping_view = pn.panel(mapper.view_rule)
 
@@ -197,7 +232,11 @@ def create_panel(mapper, width=None):
     tabs.append(("Mapped Data", mapped_data))
     tabs.append(("Export Preview", mapping_view))
     configs = pn.Column(
-        pn.panel(mapper.param, parameters=["rule_name", "source_column", "target_column"]),
+        pn.panel(
+            mapper.param,
+            parameters=["rule_name", "source_column", "target_column"],
+            name="Rule Configuration",
+        ),
         data_import,
     )
     tabs.append(("Config", configs))
@@ -225,7 +264,10 @@ def pidge_ui(data: pd.DataFrame, source: Optional[str] = None, target: Optional[
 
 
 def insert_panel_in_template(panel):
-    tmpl = pn.Template(template)
+    env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER))
+    web_ui_template = env.get_template(TEMPLATE_FILE)
+
+    tmpl = pn.Template(web_ui_template)
     tmpl.add_panel("DASHBOARD", panel)
     return tmpl
 

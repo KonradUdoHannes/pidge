@@ -19,11 +19,11 @@ def test_mapper_initilization(mapper):
     assert hasattr(mapper, "_mapped_data")
     assert "shop" in mapper._mapped_data
     assert hasattr(mapper, "_gap_summary")
-    assert "Edeka Bockenheim" in mapper._gap_summary
+    assert "Edeka Bockenheim" in mapper._gap_summary.index
     assert hasattr(mapper, "_target_summary")
-    assert "EDEKA" not in mapper._target_summary
-    assert "ALDI" in mapper._target_summary
-    assert "REWE" in mapper._target_summary
+    assert "EDEKA" not in mapper._target_summary.index
+    assert "ALDI" in mapper._target_summary.index
+    assert "REWE" in mapper._target_summary.index
     assert mapper.gap_view is None
     assert mapper.target_view is None
 
@@ -32,8 +32,8 @@ def test_mapper_insert(mapper):
     mapper.category = "EDEKA"
     mapper.pattern = "EDEKA"
     mapper.insert(mapper)
-    assert "Edeka Bockenheim" not in mapper._gap_summary
-    assert "EDEKA" in mapper._target_summary
+    assert "Edeka Bockenheim" not in mapper._gap_summary.index
+    assert "EDEKA" in mapper._target_summary.index
 
 
 def test_multi_insert(empty_mapper):
@@ -55,7 +55,7 @@ def test_multi_insert(empty_mapper):
     assert len(empty_mapper.mapping_rule["rules"]["Supermarket"]) == 2
     assert not empty_mapper._gap_summary.index.str.contains("Edeka", case=False).any()
     assert not empty_mapper._gap_summary.index.str.contains("Rewe", case=False).any()
-    assert "Supermarket" in empty_mapper._target_summary
+    assert "Supermarket" in empty_mapper._target_summary.index
 
 
 def test_views(mapper):
@@ -67,14 +67,14 @@ def test_views(mapper):
     assert isinstance(json_widget, pn.pane.JSON)
     assert json_widget.object == mapper.mapping_rule_json
 
-    assert mapper.view_gaps.value.equals(mapper._gap_summary.to_frame())
-    assert mapper.view_targets.value.equals(mapper._target_summary.to_frame())
+    assert mapper.view_gaps.value.equals(mapper._gap_summary)
+    assert mapper.view_targets.value.equals(mapper._target_summary)
     mapper.category = "EDEKA"
     mapper.pattern = "EDEKA"
     mapper.insert(mapper)
 
-    assert mapper.view_gaps.value.equals(mapper._gap_summary.to_frame())
-    assert mapper.view_targets.value.equals(mapper._target_summary.to_frame())
+    assert mapper.view_gaps.value.equals(mapper._gap_summary)
+    assert mapper.view_targets.value.equals(mapper._target_summary)
 
 
 def test_create_panel_smoke(mapper):
