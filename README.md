@@ -36,14 +36,14 @@ pidge consists out of two parts:
     transformed_data = pidge(my_input_dataframe,rule_file= 'pidge_mapping.json')
     ```
 
-### Outside of Jupyter
+### The web-ui outside of Jupyter
 
 Pidge can also run the UI as a standalone web server outside of jupyter, using the command.
 
 > python -m pidge
 
 This starts up the UI in a local web server, which is primarily intended for illustration purposes.
-Therefor it starts up with example data already loaded. However new data can be loaded and the
+Therefore it starts up with example data already loaded. However new data can be loaded and the
 predefined rules can easily be reset. The main limitation at this moment, however, is the
 constraint on the upload format for data. It only supports `.csv` and reads it with default
 `pandas.read_csv` settings.
@@ -55,7 +55,7 @@ be broken down as follows.
 
 1. One defines a possible value, a category, for the target column.
 1. One associates one or more patterns with that category.
-1. When a value of the source column matches on of the category's patters, that category is chosen.
+1. When a value of the source column matches one of the category's patterns, that category is chosen.
 1. Pattern matching checks whether the pattern is part of the source string. It is case insensitive
     and allows for regular expressions.
 1. This is repeated for as many categories as desired.

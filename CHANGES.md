@@ -1,5 +1,9 @@
 # Changes
 
+## 0.1.1
+- Added much more project information and structure web-ui
+- made a few naming changes in the ui itself to make functionality more clear
+
 ## 0.1.0
 - initial release
 - pidge ui functionality with the ability to
