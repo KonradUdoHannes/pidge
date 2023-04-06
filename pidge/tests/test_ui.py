@@ -1,80 +1,17 @@
 import panel as pn
-import pytest
 
-from pidge.ui import PidgeMapper, create_panel, create_web_ui, insert_panel_in_template
-
-
-@pytest.fixture
-def mapper(raw_shops, multiple_rules):
-    return PidgeMapper(raw_shops, multiple_rules)
-
-
-@pytest.fixture
-def empty_mapper(raw_shops, multiple_rules):
-    empty_expense_rule = {"source": "shop_raw", "target": "expense_type", "rules": {}}
-    return PidgeMapper(raw_shops, empty_expense_rule)
-
-
-def test_mapper_initilization(mapper):
-    assert hasattr(mapper, "_mapped_data")
-    assert "shop" in mapper._mapped_data
-    assert hasattr(mapper, "_gap_summary")
-    assert "Edeka Bockenheim" in mapper._gap_summary.index
-    assert hasattr(mapper, "_target_summary")
-    assert "EDEKA" not in mapper._target_summary.index
-    assert "ALDI" in mapper._target_summary.index
-    assert "REWE" in mapper._target_summary.index
-    assert mapper.gap_view is None
-    assert mapper.target_view is None
-
-
-def test_mapper_insert(mapper):
-    mapper.category = "EDEKA"
-    mapper.pattern = "EDEKA"
-    mapper.insert(mapper)
-    assert "Edeka Bockenheim" not in mapper._gap_summary.index
-    assert "EDEKA" in mapper._target_summary.index
-
-
-def test_multi_insert(empty_mapper):
-    empty_mapper.category = "Supermarket"
-    empty_mapper.pattern = "EDEKA"
-    PidgeMapper.insert(empty_mapper)
-
-    assert len(empty_mapper.mapping_rule["rules"]["Supermarket"]) == 1
-
-    # prevent duplcate inserts
-    PidgeMapper.insert(empty_mapper)
-    assert len(empty_mapper.mapping_rule["rules"]["Supermarket"]) == 1
-
-    # allow multiple inserts
-    empty_mapper.category = "Supermarket"
-    empty_mapper.pattern = "REWE"
-    PidgeMapper.insert(empty_mapper)
-
-    assert len(empty_mapper.mapping_rule["rules"]["Supermarket"]) == 2
-    assert not empty_mapper._gap_summary.index.str.contains("Edeka", case=False).any()
-    assert not empty_mapper._gap_summary.index.str.contains("Rewe", case=False).any()
-    assert "Supermarket" in empty_mapper._target_summary.index
-
-
-def test_views(mapper):
-    assert isinstance(mapper.view_gaps, pn.widgets.Tabulator)
-    assert isinstance(mapper.gap_view, pn.widgets.Tabulator)
-    assert isinstance(mapper.view_targets, pn.widgets.Tabulator)
-    assert isinstance(mapper.target_view, pn.widgets.Tabulator)
-    json_widget = mapper.view_rule()
-    assert isinstance(json_widget, pn.pane.JSON)
-    assert json_widget.object == mapper.mapping_rule_json
-
-    assert mapper.view_gaps.value.equals(mapper._gap_summary)
-    assert mapper.view_targets.value.equals(mapper._target_summary)
-    mapper.category = "EDEKA"
-    mapper.pattern = "EDEKA"
-    mapper.insert(mapper)
-
-    assert mapper.view_gaps.value.equals(mapper._gap_summary)
-    assert mapper.view_targets.value.equals(mapper._target_summary)
+from pidge.examples import SAMPLE_FOLDER
+from pidge.ui import create_panel, create_web_ui, pidge_ui
+from pidge.ui.ui import (
+    create_gap_view,
+    create_input_data_view,
+    create_mapped_data_view,
+    create_mapping_controls,
+    create_rule_view,
+    create_target_view,
+    create_ui_config,
+    insert_panel_in_template,
+)
 
 
 def test_create_panel_smoke(mapper):
@@ -90,3 +27,91 @@ def test_insert_panel_in_template_smoke():
 
 def test_create_web_ui_smoke(mapper):
     create_web_ui(mapper)
+
+
+def test_pidge_ui_smoke(raw_shops):
+    pidge_ui(raw_shops)
+
+
+def test_create_ui_config(mapper):
+    config = create_ui_config(mapper)
+    with open(SAMPLE_FOLDER / "fake_expenses.csv", "rb") as f:
+        config[1].value = f.read()
+    assert mapper.source_column == "date"
+
+
+def test_create_mapping_controls(mapper):
+    mapping_control = create_mapping_controls(mapper)
+
+    mapping_parameters = mapping_control[0][0]
+    mapping_parameter_headline = mapping_parameters[0]
+    pattern_label = mapping_parameters[1]
+    category_label = mapping_parameters[2]
+
+    gap_headline = mapping_control[1][0]
+    assert "shop_raw" in gap_headline.object
+
+    target_headline = mapping_control[1][2]
+    assert "shop" in target_headline.object
+
+    mapper.source_column = "shop_type"
+    assert "shop_type" in gap_headline.object
+    assert "shop_type" in mapping_parameter_headline.value
+    assert "shop_type" in pattern_label.name
+
+    mapper.target_column = "new_target_column"
+    assert "new_target_column" in target_headline.object
+    assert "new_target_column" in mapping_parameter_headline.value
+    assert "new_target_column" in category_label.name
+
+
+def test_create_input_data(mapper):
+    inp = create_input_data_view(mapper)
+    assert isinstance(inp, pn.widgets.Tabulator)
+
+
+def test_create_gap_view(mapper):
+    gap_view = create_gap_view(mapper)
+    assert gap_view.value.index.str.contains("EDEKA", case=False).any()
+
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+    mapper.insert(mapper)
+
+    assert not gap_view.value.index.str.contains("EDEKA", case=False).any()
+
+
+def test_create_target_view(mapper):
+    target_view = create_target_view(mapper)
+    assert not target_view.value.index.str.contains("EDEKA", case=False).any()
+
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+    mapper.insert(mapper)
+
+    assert target_view.value.index.str.contains("EDEKA", case=False).any()
+
+
+def test_create_mapped_data(mapper):
+    mapped_data = create_mapped_data_view(mapper)
+    assert isinstance(mapped_data, pn.widgets.Tabulator)
+    assert not any(mapped_data.value[mapper.target_column] == "EDEKA")
+
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+    mapper.insert(mapper)
+
+    assert any(mapped_data.value[mapper.target_column] == "EDEKA")
+
+
+def test_create_export_preview(mapper):
+    export = create_rule_view(mapper)
+    assert isinstance(export, pn.pane.base.PaneBase)
+    assert isinstance(export.object, str)
+    assert "EDEKA" not in export.object
+
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+    mapper.insert(mapper)
+
+    assert "EDEKA" in export.object
