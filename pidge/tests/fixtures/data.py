@@ -17,7 +17,7 @@ def raw_shops():
                 None,
             ]
         }
-    )
+    ).assign(shop_type="Supermarket")
 
 
 @pytest.fixture

@@ -42,9 +42,9 @@ build:
 
 .PHONY:upload-test
 upload-test: build
-	poetry run twine upload --repository testpypi dist/*
+	version=$$(sed -n -r "s/^version = \"([^\"]*)\"/\1/p" pyproject.toml); poetry run twine upload --repository testpypi dist/pidge-$$version.tar.gz
 
 
 .PHONY:upload
 upload: build
-	poetry run twine upload dist/*
+	version=$$(sed -n -r "s/^version = \"([^\"]*)\"/\1/p" pyproject.toml); poetry run twine upload dist/pidge-$$version.tar.gz
