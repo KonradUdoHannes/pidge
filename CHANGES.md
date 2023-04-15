@@ -1,6 +1,7 @@
 # Changes
 
 ## TBD
+- Replaced json panel with JSONEditor widget to allow for easy interactive fixes, such as typos.
 - Added current pidge version to the rule json to allow for easier backward compatible
     treatment if the rule format changes in the future
 

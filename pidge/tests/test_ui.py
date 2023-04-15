@@ -1,3 +1,5 @@
+import copy
+
 import panel as pn
 
 from pidge.examples import SAMPLE_FOLDER
@@ -104,14 +106,21 @@ def test_create_mapped_data(mapper):
     assert any(mapped_data.value[mapper.target_column] == "EDEKA")
 
 
-def test_create_export_preview(mapper):
+def test_create_rule_view(mapper):
     export = create_rule_view(mapper)
-    assert isinstance(export, pn.pane.base.PaneBase)
-    assert isinstance(export.object, str)
-    assert "EDEKA" not in export.object
+    assert isinstance(export, pn.widgets.JSONEditor)
+    assert isinstance(export.value, dict)
+    assert "EDEKA" not in export.value["rules"]
 
     mapper.category = "EDEKA"
     mapper.pattern = "EDEKA"
     mapper.insert(mapper)
 
-    assert "EDEKA" in export.object
+    assert "EDEKA" in export.value["rules"]
+
+    assert "REWE" in export.value["rules"]
+    assert "REWE" in mapper.mapping_rule["rules"]
+    mapping_copy = copy.deepcopy(export.value)
+    del mapping_copy["rules"]["REWE"]
+    export.value = mapping_copy
+    assert "REWE" not in mapper.mapping_rule["rules"]

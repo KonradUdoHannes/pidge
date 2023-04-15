@@ -1,4 +1,4 @@
-import json
+import copy
 from importlib.metadata import version
 
 import pandas as pd
@@ -8,7 +8,6 @@ from ..core import apply_pidge_mapping, summarize_rule_gaps, summarize_target
 
 
 class PidgeMapper(param.Parameterized):
-    mapping_rule_json = param.String()
     source_column = param.String()
     target_column = param.String()
     rule_name = param.String(default="pidge_mapping", readonly=True)
@@ -26,7 +25,7 @@ class PidgeMapper(param.Parameterized):
         super().__init__()
 
         self.input_data = input_data.copy()
-        self.mapping_rule_json = json.dumps(rule)
+        self.mapping_rule = rule
 
         # copy initial values as the mapping_rule dict is subject
         # to param dependencies that trigger on assignments and as such
@@ -36,25 +35,24 @@ class PidgeMapper(param.Parameterized):
         self.source_column = init_source
         self.target_column = init_target
 
-    @param.depends("mapping_rule_json", watch=True)
-    def _parse_mapping_rule(self):
-        self.mapping_rule = json.loads(self.mapping_rule_json)
+    @property
+    def mapping_rule(self):
+        return copy.deepcopy(self._mapping_rule)
+
+    @mapping_rule.setter
+    def mapping_rule(self, value):
+        self._mapping_rule = copy.deepcopy(value)
         if "pidge_version" not in self.mapping_rule:
-            self.mapping_rule["pidge_version"] = version("pidge")
-            with param.parameterized.discard_events(self):
-                self.mapping_rule_json = json.dumps(self.mapping_rule)
+            self._mapping_rule["pidge_version"] = version("pidge")
         self.mapping_updated = True
 
     @param.depends("source_column", "target_column", watch=True)
     def _update_source_target(self):
-        self.mapping_rule["source"] = self.source_column
-        self.mapping_rule["target"] = self.target_column
-        self._serialize_rule()
+        self._mapping_rule["source"] = self.source_column
+        self._mapping_rule["target"] = self.target_column
+        self.mapping_updated = True
 
-    def _serialize_rule(self):
-        self.mapping_rule_json = json.dumps(self.mapping_rule)
-
-    @param.depends("_parse_mapping_rule", "input_data_updated", watch=True)
+    @param.depends("mapping_updated", "input_data_updated", watch=True)
     def calc_mapped_data(self):
         self.mapped_data = apply_pidge_mapping(self.input_data, self.mapping_rule)
         self.mapped_data_updated = True
@@ -77,13 +75,13 @@ class PidgeMapper(param.Parameterized):
 
     def insert_rule(self):
         if (cat := self.category) != "" and (sub := self.pattern) != "":
-            if cat in self.mapping_rule["rules"]:
-                if sub not in self.mapping_rule["rules"][cat]:
-                    self.mapping_rule["rules"][cat].append(sub)
+            if cat in self._mapping_rule["rules"]:
+                if sub not in self._mapping_rule["rules"][cat]:
+                    self._mapping_rule["rules"][cat].append(sub)
             else:
-                self.mapping_rule["rules"][cat] = [sub]
-            self._serialize_rule()
+                self._mapping_rule["rules"][cat] = [sub]
+            self.mapping_updated = True
 
     def reset_rule(self):
-        self.mapping_rule["rules"] = {}
-        self._serialize_rule()
+        self._mapping_rule["rules"] = {}
+        self.mapping_updated = True
