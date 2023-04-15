@@ -1,5 +1,9 @@
 # Changes
 
+## TBD
+- Added current pidge version to the rule json to allow for easier backward compatible
+    treatment if the rule format changes in the future
+
 ## 0.1.1
 - Added much more project information and structure web-ui
 - made a few naming changes in the ui itself to make functionality more clear
