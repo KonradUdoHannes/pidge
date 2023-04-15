@@ -1,4 +1,5 @@
 import json
+from importlib.metadata import version
 
 import pandas as pd
 import param
@@ -38,6 +39,10 @@ class PidgeMapper(param.Parameterized):
     @param.depends("mapping_rule_json", watch=True)
     def _parse_mapping_rule(self):
         self.mapping_rule = json.loads(self.mapping_rule_json)
+        if "pidge_version" not in self.mapping_rule:
+            self.mapping_rule["pidge_version"] = version("pidge")
+            with param.parameterized.discard_events(self):
+                self.mapping_rule_json = json.dumps(self.mapping_rule)
         self.mapping_updated = True
 
     @param.depends("source_column", "target_column", watch=True)

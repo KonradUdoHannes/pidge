@@ -1,4 +1,21 @@
+from contextlib import contextmanager
+
 from pidge.ui.mapper import PidgeMapper
+
+
+@contextmanager
+def assert_value_changed_once(p, name):
+    assertion_state = {"change_counter": 0}
+
+    def inc(*args, **kwargs):
+        assertion_state["change_counter"] += 1
+
+    p.param.watch_values(inc, [name])
+
+    yield
+    assert_error = "Value did not change exactly once"
+
+    assert assertion_state["change_counter"] == 1, assert_error
 
 
 def test_mapper_initilization(mapper):
@@ -10,6 +27,16 @@ def test_mapper_initilization(mapper):
     assert "EDEKA" not in mapper.target_summary.index
     assert "ALDI" in mapper.target_summary.index
     assert "REWE" in mapper.target_summary.index
+    assert "pidge_version" in mapper.mapping_rule
+    assert "pidge_version" in mapper.mapping_rule_json
+
+
+def test_pidge_version_on_rule_reset(mapper):
+    assert "pidge_version" in mapper.mapping_rule
+    assert "pidge_version" in mapper.mapping_rule_json
+    mapper.reset_rule()
+    assert "pidge_version" in mapper.mapping_rule
+    assert "pidge_version" in mapper.mapping_rule_json
 
 
 def test_mapper_insert(mapper):
@@ -40,3 +67,35 @@ def test_multi_insert(empty_mapper):
     assert not empty_mapper.gap_summary.index.str.contains("Edeka", case=False).any()
     assert not empty_mapper.gap_summary.index.str.contains("Rewe", case=False).any()
     assert "Supermarket" in empty_mapper.target_summary.index
+
+
+def test_insert_triggers_gap_updated(mapper):
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+
+    with assert_value_changed_once(mapper, "gap_summary_updated"):
+        mapper.insert(mapper)
+
+
+def test_insert_triggers_target_updated(mapper):
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+
+    with assert_value_changed_once(mapper, "target_summary_updated"):
+        mapper.insert(mapper)
+
+
+def test_insert_triggers_mapped_data_updated(mapper):
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+
+    with assert_value_changed_once(mapper, "mapped_data_updated"):
+        mapper.insert(mapper)
+
+
+def test_insert_triggers_mapping_rule_updated(mapper):
+    mapper.category = "EDEKA"
+    mapper.pattern = "EDEKA"
+
+    with assert_value_changed_once(mapper, "mapping_updated"):
+        mapper.insert(mapper)
