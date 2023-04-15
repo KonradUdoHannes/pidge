@@ -1,3 +1,4 @@
+import json
 from io import StringIO
 from pathlib import Path
 from typing import Callable, Optional
@@ -79,10 +80,10 @@ def create_target_view(mapper):
 
 @register_panel_tab("Mapping Controll")
 def create_mapping_controls(mapper):
-    @param.depends(mapper.param.mapping_rule_json)
-    def download(mapping_rule_json):
+    @param.depends(mapper.param.mapping_updated)
+    def download(mapping_updated):
         sio = StringIO()
-        sio.write(mapping_rule_json)
+        sio.write(json.dumps(mapper.mapping_rule))
         sio.seek(0)
         return sio
 
@@ -166,15 +167,20 @@ def create_mapped_data_view(mapper):
     return mapped_data_view
 
 
-@register_panel_tab("Export Preview")
+@register_panel_tab("Complete Mapping Rule")
 def create_rule_view(mapper):
-    json_view = pn.pane.JSON(mapper.mapping_rule_json)
+    json_editor = pn.widgets.JSONEditor(value=mapper.mapping_rule, width=500)
 
     @param.depends(mapper.param.mapping_updated, watch=True)
     def update_input_view(mapping_updated):
-        json_view.object = mapper.mapping_rule_json
+        json_editor.value = mapper.mapping_rule
 
-    return json_view
+    def update_editor_changes(event):
+        mapper.mapping_rule = event.new
+
+    json_editor.param.watch(update_editor_changes, "value")
+
+    return json_editor
 
 
 @register_panel_tab("Config")

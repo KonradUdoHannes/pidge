@@ -28,15 +28,12 @@ def test_mapper_initilization(mapper):
     assert "ALDI" in mapper.target_summary.index
     assert "REWE" in mapper.target_summary.index
     assert "pidge_version" in mapper.mapping_rule
-    assert "pidge_version" in mapper.mapping_rule_json
 
 
 def test_pidge_version_on_rule_reset(mapper):
     assert "pidge_version" in mapper.mapping_rule
-    assert "pidge_version" in mapper.mapping_rule_json
     mapper.reset_rule()
     assert "pidge_version" in mapper.mapping_rule
-    assert "pidge_version" in mapper.mapping_rule_json
 
 
 def test_mapper_insert(mapper):

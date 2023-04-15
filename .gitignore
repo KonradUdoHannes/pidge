@@ -9,6 +9,7 @@ htmlcov/*
 # Ignore dynaconf secret files
 .secrets.*
 *.swp
+*.swo
 *.pkl
 *.parquet
 local/*
