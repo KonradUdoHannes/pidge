@@ -20,8 +20,6 @@ def test_create_panel_smoke(mapper):
     panel = create_panel(mapper)
     assert isinstance(panel, pn.Tabs)
 
-    create_panel(mapper, width=500)
-
 
 def test_insert_panel_in_template_smoke():
     insert_panel_in_template(pn.Row())

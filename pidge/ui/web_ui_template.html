@@ -1,89 +1,11 @@
 {% extends base %}
+{% block title %}pidge web ui{% endblock %}
 {% block preamble %}
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 {% endblock %}
 {% block postamble %}
-<style>
-  * {
-  margin: 0;
-  }
-  body {
-  background-color: #F0FFFF;
-  }
-  p {
-  margin: 0.5em 0 0.5em 0;
-  }
-  h1,h2,h3 {
-  margin: 1.5em 0 0.7em 0;
-  }
-  header {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #90EE90;
-  padding: 10px;
-  z-index: 10;
-  }
-  header > nav a{
-  color: #000;
-  text-decoration: none;
-  }
-  header > nav > ul {
-  display: inline;
-  padding: 0;
-  }
-  header > nav > ul > li {
-  display: inline-block;
-  list-style: none;
-  margin: 0 5px 0 5px;
-  }
-  #leftmenu {
-  padding-top: 3em;
-  display: none;
-  }
-  #main {
-  padding-top: 3em;
-  float: left;
-  width: 75%;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 10px;
-  padding-right: 10px;
-  }
-  aside > nav a{
-  color: #000;
-  text-decoration: none;
-  font-weight: bold;
-  }
-  aside > nav > ul {
-  list-style: none;
-  margin: 0;
-  padding : 1em 0 0 0;
-  }
-  aside > nav > ul >li {
-  padding : 0 0 0.8em 1.5em ;
-  }
-  main {
-  display: block;
-  padding-bottom: 3em;
-  min-height: 85%;
-  }
-  @media only screen and (min-width: 768px) {
-  #leftmenu {
-  display: unset;
-  float: left;
-  width: 20%;
-  height: 100%;
-  position: fixed;
-  background-color: #D3D3D3;
-  }
-  #main {
-  float: right;
-  }
-  }
-</style>
+<link rel="stylesheet" href="/css/webui.css">
+<link rel="icon" type="image/png" sizes="16x16"  href="/assets/favicon-16x16.png">
 {% endblock %}
 <!-- goes in body -->
 {% block contents %}
@@ -97,8 +19,8 @@
     </ul>
   </nav>
 </header>
-<main>
-  <aside id="leftmenu">
+<main class="row">
+  <aside id="leftmenu" class="column leftmenu large-1-2 no-scroll">
     <nav>
       <ul>
         <li><a href="#pidge-ui">pidge UI</a></li>
@@ -110,12 +32,14 @@
       </ul>
     </nav>
   </aside>
-  <div id="main">
-    <h2 id="pidge-ui" class="center">pidge UI</h2>
-    <div class="center">
-      {{ embed(roots.DASHBOARD) }}
+  <div id="main" class="column limited small-12 large-2-12">
+    <div id="ui">
+      <h2 id="pidge-ui">pidge UI</h2>
+      <div>
+        {{ embed(roots.DASHBOARD) }}
+      </div>
     </div>
-    <article class="center">
+    <article>
       <h2 id="ui-summary">What does the UI show?</h2>
       <p>
         This is the pidge UI with example data that takes the table found under
