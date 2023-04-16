@@ -1,6 +1,8 @@
 # Changes
 
 ## TBD
+- In the UI under Mapping Control, linked row selection of gap and target summary to patter and
+ category input respectively.
 - Replaced json panel with JSONEditor widget to allow for easy interactive fixes, such as typos.
 - Added current pidge version to the rule json to allow for easier backward compatible
     treatment if the rule format changes in the future

@@ -52,11 +52,18 @@ def create_gap_view(mapper):
         width=400,
         height=210,
         widths={mapper.source_column: "80%", "count": "20%"},
+        selectable=1,
     )
 
     @param.depends(mapper.param.gap_summary_updated, watch=True)
     def update_gap_view(gap_summary_udpated):
         gap_view.value = mapper.gap_summary
+
+    def select_as_pattern(event):
+        if len(event.new) == 1:
+            mapper.pattern = event.obj.selected_dataframe.index[0]
+
+    gap_view.param.watch(select_as_pattern, "selection")
 
     return gap_view
 
@@ -69,11 +76,18 @@ def create_target_view(mapper):
         width=400,
         height=210,
         widths={mapper.target_column: "80%", "count": "20%"},
+        selectable=1,
     )
 
     @param.depends(mapper.param.target_summary_updated, watch=True)
     def update_target_view(target_summary_udated):
         target_view.value = mapper.target_summary
+
+    def select_as_category(event):
+        if len(event.new) == 1:
+            mapper.category = event.obj.selected_dataframe.index[0]
+
+    target_view.param.watch(select_as_category, "selection")
 
     return target_view
 
