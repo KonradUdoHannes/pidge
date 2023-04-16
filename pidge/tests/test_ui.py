@@ -83,6 +83,13 @@ def test_create_gap_view(mapper):
     assert not gap_view.value.index.str.contains("EDEKA", case=False).any()
 
 
+def test_gap_view_row_selection(mapper):
+    gap_view = create_gap_view(mapper)
+    assert mapper.pattern == ""
+    gap_view.selection = [0]
+    assert mapper.pattern == mapper.gap_summary.index[0]
+
+
 def test_create_target_view(mapper):
     target_view = create_target_view(mapper)
     assert not target_view.value.index.str.contains("EDEKA", case=False).any()
@@ -92,6 +99,13 @@ def test_create_target_view(mapper):
     mapper.insert(mapper)
 
     assert target_view.value.index.str.contains("EDEKA", case=False).any()
+
+
+def test_target_view_row_selection(mapper):
+    target_view = create_target_view(mapper)
+    assert mapper.category == ""
+    target_view.selection = [0]
+    assert mapper.category == mapper.target_summary.index[0]
 
 
 def test_create_mapped_data(mapper):
