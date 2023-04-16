@@ -24,11 +24,11 @@ def register_panel_tab(tab_name: str) -> Callable:
     return register_creator_function
 
 
-def create_panel(mapper, width=None):
-    # if width is not None:
-    #    adjust_view_widths(mapper.view_targets, width)
+def create_panel(mapper):
 
-    tabs = pn.Tabs()
+    tabs = pn.Tabs(
+        css_classes=["panel-ui-box"], sizing_mode="scale_width", min_width=300, width_policy="min"
+    )
 
     for name, creation_function in PANEL_TABS:
         tabs.append((name, creation_function(mapper)))
@@ -49,7 +49,7 @@ def create_gap_view(mapper):
         value=mapper.gap_summary,
         pagination="local",
         page_size=5,
-        width=400,
+        # width=400,
         height=210,
         widths={mapper.source_column: "80%", "count": "20%"},
         selectable=1,
@@ -73,7 +73,7 @@ def create_target_view(mapper):
         value=mapper.target_summary,
         pagination="local",
         page_size=5,
-        width=400,
+        # width=400,
         height=210,
         widths={mapper.target_column: "80%", "count": "20%"},
         selectable=1,
@@ -107,7 +107,7 @@ def create_mapping_controls(mapper):
     mapping_params = pn.panel(
         mapper.param,
         parameters=m_params,
-        width=275,
+        width=265,
         sort=lambda x: (["name"] + m_params).index(x[0]),
         name="",
     )
@@ -142,14 +142,14 @@ def create_mapping_controls(mapper):
         pn.Column(
             mapping_params,
             rule_export,
-            width=300,
+            width=285,
         ),
         pn.Column(
             gap_table_headline,
             gap_view,
             target_overview_headline,
             target_view,
-            width=300,
+            width=285,
         ),
     )
     return mapping_control
@@ -158,7 +158,11 @@ def create_mapping_controls(mapper):
 @register_panel_tab("Input Data")
 def create_input_data_view(mapper):
     input_view = pn.widgets.Tabulator(
-        mapper.input_data, pagination="local", page_size=10, show_index=False
+        mapper.input_data,
+        pagination="local",
+        page_size=10,
+        show_index=False,
+        sizing_mode="stretch_width",
     )
 
     @param.depends(mapper.param.input_data_updated, watch=True)
@@ -171,7 +175,11 @@ def create_input_data_view(mapper):
 @register_panel_tab("Mapped Data")
 def create_mapped_data_view(mapper):
     mapped_data_view = pn.widgets.Tabulator(
-        mapper.mapped_data, pagination="local", page_size=10, show_index=False
+        mapper.mapped_data,
+        pagination="local",
+        page_size=10,
+        show_index=False,
+        sizing_mode="stretch_width",
     )
 
     @param.depends(mapper.param.mapped_data_updated, watch=True)
@@ -183,7 +191,7 @@ def create_mapped_data_view(mapper):
 
 @register_panel_tab("Complete Mapping Rule")
 def create_rule_view(mapper):
-    json_editor = pn.widgets.JSONEditor(value=mapper.mapping_rule, width=500)
+    json_editor = pn.widgets.JSONEditor(value=mapper.mapping_rule, sizing_mode="stretch_width")
 
     @param.depends(mapper.param.mapping_updated, watch=True)
     def update_input_view(mapping_updated):
@@ -251,6 +259,6 @@ def insert_panel_in_template(panel):
     return tmpl
 
 
-def create_web_ui(mapper, width=None):
-    panel = create_panel(mapper, width=None)
+def create_web_ui(mapper):
+    panel = create_panel(mapper)
     return insert_panel_in_template(panel)
