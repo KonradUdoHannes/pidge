@@ -73,7 +73,6 @@ def create_target_view(mapper):
         value=mapper.target_summary,
         pagination="local",
         page_size=5,
-        # width=400,
         height=210,
         widths={mapper.target_column: "80%", "count": "20%"},
         selectable=1,

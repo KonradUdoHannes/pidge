@@ -21,7 +21,7 @@ pidge consists out of two parts:
     from pidge import pidge_ui
     import panel as pn
 
-    pn.extensions('tabulator')
+    pn.extensions('tabulator','jsoneditor')
 
     pidge_ui(my_input_dataframe)
     ```
