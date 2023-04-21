@@ -1,6 +1,6 @@
 # Changes
 
-## TBD
+## 0.1.2
 - In the UI under Mapping Control, linked row selection of gap and target summary to patter and
  category input respectively.
 - Replaced json panel with JSONEditor widget to allow for easy interactive fixes, such as typos.
