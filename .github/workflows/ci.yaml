@@ -1,62 +1,48 @@
-"name": |-
-  Run tests
+"name": Run tests
 "on":
   "push":
     "branches":
-    - |-
-      main
+    - main
   "pull_request":
     "branches":
-    - |-
-      main
+    - main
   "workflow_dispatch":
 "jobs":
   "test":
-    "runs-on": |-
-      ubuntu-latest
+    "runs-on": ubuntu-latest
+    "strategy":
+        "fail-fast": false
+        "matrix":
+            "config":
+                - {'pandas_install_string':'pandas>=2'}
+                - {'pandas_install_string':'pandas>=1.5,<2'}
     "steps":
-    - "name": |-
-        Checkout
-      "uses": |-
-        actions/checkout@v3
-    - "name": |-
-        Set up Python
-      "uses": |-
-        actions/setup-python@v4
+    - "name": Checkout
+      "uses": actions/checkout@v3
+    - "name": Set up Python
+      "uses": actions/setup-python@v4
       "with":
-        "python-version": |-
-          3.11.1
-    - "name": |-
-        poetry cache
-      "uses": |-
-        actions/cache@v3
+        "python-version": 3.11.1
+    - "name": poetry cache
+      "uses": actions/cache@v3
       "with":
-        "path": |-
-          ~/.cache/pypoetry
-        "key": |-
-          ${{ runner.os }}-poetry
-    - "name": |-
-        pre-commit-cache
-      "uses": |-
-        actions/cache@v3
+        "path": ~/.cache/pypoetry
+        "key": ${{ runner.os }}-poetry
+    - "name": pre-commit-cache
+      "uses": actions/cache@v3
       "with":
-        "path": |-
-          ~/.cache/pre-commit
-        "key": |-
-          ${{ runner.os }}-venv-${{ hashFiles('.pre-commit-config.yaml') }}
-    - "name": |-
-        Set up the environment
+        "path": ~/.cache/pre-commit
+        "key": ${{ runner.os }}-venv-${{ hashFiles('.pre-commit-config.yaml') }}
+    - "name": Set up the environment
       "run": |
         pip install -U pip
         pip install poetry>=1.1.11
-        poetry config installer.modern-installation false
-        poetry install
-    - "name": |-
-        Run pre-commit hooks
+        poetry build -f sdist
+        export version=$(sed -n -r "s/^version = \"([^\"]*)\"/\1/p" pyproject.toml)
+        pip install "dist/pidge-$version.tar.gz" "${{ matrix.config.pandas_install_string}}" pytest pytest-cov pre-commit
+    - "name": Run pre-commit hooks
       "run": |
-        poetry run pre-commit install
-        poetry run pre-commit run --all-files
-    - "name": |-
-        Run Tests
-      "run": |-
-        make test-coverage
+        pre-commit install
+        pre-commit run --all-files
+    - "name": Run Tests
+      "run": pytest -v --pyargs --cov pidge --cov-fail-under 80
