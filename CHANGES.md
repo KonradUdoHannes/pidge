@@ -1,5 +1,8 @@
 # Changes
 
+## 0.2.0
+- pandas 2 support in addition to pandas 1.5 support
+
 ## 0.1.2
 - In the UI under Mapping Control, linked row selection of gap and target summary to patter and
  category input respectively.
